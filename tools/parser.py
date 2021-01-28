@@ -2,29 +2,38 @@
 Annotation file parser script
 '''
 
+import glob
+import os
 import cv2
 
 
-def yoloParser(filename, imgname):
-    WIDTH, HEIGHT, _ = cv2.imread(imgname).shape
+def yoloParser(input_dir):
+    files = glob.glob(os.path.join(input_dir, '*.txt'))
 
-    with open(filename) as f:
-        origin = f.readlines()
+    objects = list()
+    for filename in files:
+        imgname = filename.split('.')[0] + '.png'
+        WIDTH, HEIGHT, _ = cv2.imread(imgname).shape
 
-    try:
-        origin.remove('')
-    except ValueError:
-        pass
+        with open(filename) as f:
+            origin = f.readlines()
 
-    origin_list = list()
-    for line in origin:
-        class_idx, x, y, w, h, _ = line.split(' ')
+        try:
+            origin.remove('')
+        except ValueError:
+            pass
 
-        x = round(x * WIDTH)
-        y = round(y * HEIGHT)
-        w = round(w * WIDTH)
-        h = round(h * HEIGHT)
+        annotations = list()
+        for line in origin:
+            class_idx, x, y, w, h, _ = line.split(' ')
 
-        origin_list.append([class_idx, x, y, w, h])
+            x = round(x * WIDTH)
+            y = round(y * HEIGHT)
+            w = round(w * WIDTH)
+            h = round(h * HEIGHT)
 
-    return origin_list
+            annotations.append([class_idx, x, y, w, h])
+
+        objects.append(annotations)
+
+    return objects
