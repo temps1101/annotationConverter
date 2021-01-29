@@ -8,9 +8,28 @@ import cv2
 
 
 def yoloParser(input_dir):
+    '''Parses YOLO format annotation and returns a list of annotations
+
+    ===
+    Directory tree should be like this:
+
+    input_dir
+    ├─0.jpg # Image to use for the AI
+    ├─0.txt # Text annotation file written in YOLO format of the image that
+              has the same name.
+    ...
+    ===
+
+    Args:
+        input_dir (str): Directory of the annotation files.
+
+    Returns:
+        list: dictionary of annotations.
+    '''
+
     files = glob.glob(os.path.join(input_dir, '*.txt'))
 
-    objects = list()
+    objects = dict()
     for filename in files:
         imgname = filename.split('.')[0] + '.png'
         WIDTH, HEIGHT, _ = cv2.imread(imgname).shape
@@ -34,6 +53,6 @@ def yoloParser(input_dir):
 
             annotations.append([class_idx, x, y, w, h])
 
-        objects.append(annotations)
+        objects[filename] = annotations
 
     return objects
