@@ -4,6 +4,8 @@ Annotation file parser script
 
 import glob
 import os
+import xml.etree.ElementTree as et
+
 import cv2
 
 
@@ -56,3 +58,53 @@ def yoloParser(input_dir):
         objects[filename] = annotations
 
     return objects
+
+
+def vocParser(annotation_dir, class_filename):
+    '''Parses a VOC format xml annotation files.
+
+    ===
+    Directory tree must be like this:
+
+    annotation_dir
+    ├─000001.xml
+    ├─000002.xml
+    ...
+
+    ===
+    Args:
+        annotation_dir (str): Directory where the annotation files are located.
+        class_filename (str): Class file path.
+    '''
+    with open(class_filename) as f:
+        classes = f.readlines()
+
+    try:
+        classes.remove('')
+    except ValueError:
+        pass
+
+    files = glob.glob(os.path.join(annotation_dir, '*.xml'))
+
+    objects = dict()
+    for file in files:
+        annotations = list()
+        tree = et.parse(file)
+        root = tree.getroot()
+
+        imgname = root[1].text.split('.')[0]
+        HEIGHT, WIDTH, _ = [e.text for e in root[4]]
+
+        annotations = list()
+        for objects in root[5:]:
+            class_idx = classes.index(objects[0].text)
+
+            x1, y1, x2, y2 = [int(e.text) for e in objects[4]]
+            x = round((x1 + x2) / 2)
+            y = round((y1 + y2) / 2)
+            w = x2 - x1
+            h = y2 - y1
+
+            annotations.append([class_idx, x, y, w, h])
+
+        objects[imgname] = annotations
